@@ -42,14 +42,13 @@ wifi热点为`192.168.43.1`，同时提供了`192.168.1.1`版本（`43.1`**连�
 [Release](https://github.com/XhyEax/SoftApHelper/releases)
 
 ## 作用域
-推荐使用`LSPosed`指定作用域（已配置推荐作用域）
+模块已内置静态作用域（`META-INF/xposed/scope.list`，`staticScope=true`），安装后由框架自动应用，无需手动勾选：
+
 ### 安卓11及以下
-系统框架
+`system`（虚拟包名，代表 system_server）
 
 ### 安卓12及以上（以及部分安卓11设备）
-注意：高版本LSPosed勾选Tethering失败是正常现象，不影响插件生效
-
-系统框架（一般只钩这个就可以了，勾选Tethering是保险起见）
+`system`
 
 `com.google.android.networkstack.tethering.inprocess`
 
@@ -58,6 +57,11 @@ wifi热点为`192.168.43.1`，同时提供了`192.168.1.1`版本（`43.1`**连�
 `com.google.android.networkstack.tethering`
 
 `com.android.networkstack.tethering`
+
+### 框架要求
+本模块使用 libxposed API 102（新接口 `io.github.libxposed.api`），需要
+`LSPosed v1.9.2+`（或 `Vector` 等支持 API 102 的框架）。旧版 `LSPosed` 及
+`de.robv.android.xposed` 兼容框架无法加载本模块。
 
 ## 连接测试&问题反馈
 开启热点后，手机端使用`ifconfig`命令查看IP（或usb连接电脑后，进入`adb shell`执行）。或使用其他机器连接热点后，`ping 192.168.43.1`。

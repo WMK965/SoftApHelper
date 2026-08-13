@@ -1,0 +1,3 @@
+# Never apply line-ending conversion to binary files (fixes corrupted gradle-wrapper.jar on Windows)
+*.jar binary
+*.apk binary
