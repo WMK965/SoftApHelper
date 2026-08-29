@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">SoftApHelper</string>
+    <string name="app_title">SoftApHelper</string>
+    <string name="status_section_title">模块状态</string>
+    <string name="settings_section_title">设置</string>
+    <string name="launcher_icon_title">隐藏桌面图标</string>
+    <string name="launcher_icon_summary">开启后桌面入口会隐藏，仍可从 LSPosed 管理器进入模块页面</string>
+    <string name="wifi_cidr_title">热点 CIDR 段</string>
+    <string name="wifi_cidr_summary">用于 Wi-Fi 热点网关地址，例如 192.168.43.1/24</string>
+    <string name="save_cidr">保存</string>
+    <string name="reset_cidr">恢复默认</string>
 </resources>

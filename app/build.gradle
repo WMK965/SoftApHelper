@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk 37
 
     defaultConfig {
         applicationId "com.xhy.xp.softaphelper"
-        minSdk 23
-        targetSdk 33
-        versionCode 1100
+        minSdk 26
+        targetSdk 37
+        versionCode 1103
         versionName "1.100"
     }
 
@@ -29,4 +29,5 @@ android {
 
 dependencies {
     compileOnly 'io.github.libxposed:api:102.0.0'
+    implementation 'io.github.libxposed:service:102.0.0'
 }

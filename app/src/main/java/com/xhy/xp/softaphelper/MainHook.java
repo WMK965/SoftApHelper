@@ -1,5 +1,6 @@
 package com.xhy.xp.softaphelper;
 
+import android.content.SharedPreferences;
 import android.net.IpPrefix;
 import android.net.LinkAddress;
 import android.net.MacAddress;
@@ -33,8 +34,6 @@ public class MainHook extends XposedModule {
 
     private static final String callerMethodName_Q = "configureIPv4";
 
-    private static final String WIFI_HOST_IFACE_ADDR = "192.168.43.1";
-
     // TetheringType
     public static final int TETHERING_INVALID = -1;
     public static final int TETHERING_WIFI = 0;
@@ -45,7 +44,6 @@ public class MainHook extends XposedModule {
     public static final int TETHERING_ETHERNET = 5;
     public static final int TETHERING_WIGIG = 6;
 
-    private static final String WIFI_HOST_IFACE_ADDRESS = WIFI_HOST_IFACE_ADDR + "/24";
     private static final String USB_HOST_IFACE_ADDRESS = "192.168.42.1/24";
     private static final String BT_HOST_IFACE_ADDRESS = "192.168.44.1/24";
     private static final String P2P_HOST_IFACE_ADDRESS = "192.168.49.1/24";
@@ -68,7 +66,6 @@ public class MainHook extends XposedModule {
     private String processName = "";
 
     static {
-        AddressMap.put(TETHERING_WIFI, WIFI_HOST_IFACE_ADDRESS);
         AddressMap.put(TETHERING_USB, USB_HOST_IFACE_ADDRESS);
         AddressMap.put(TETHERING_BLUETOOTH, BT_HOST_IFACE_ADDRESS);
         AddressMap.put(TETHERING_WIFI_P2P, P2P_HOST_IFACE_ADDRESS);
@@ -83,7 +80,7 @@ public class MainHook extends XposedModule {
         Field field_mPrivateAddressCoordinator = ReflectUtils.findField(klass, "mPrivateAddressCoordinator");
         // Android 15+, bypass
         if(field_mPrivateAddressCoordinator == null){
-            log("[Warning]: [" + WIFI_HOST_IFACE_ADDR + "] field_mPrivateAddressCoordinator not found.");
+            log("[Warning]: [" + getWifiHostAddress() + "] field_mPrivateAddressCoordinator not found.");
             return false;
         }
         Object mPrivateAddressCoordinator = field_mPrivateAddressCoordinator.get(thiz);
@@ -104,6 +101,29 @@ public class MainHook extends XposedModule {
 
         log("[Error]: [isConflictPrefix] method not found.");
         return false;
+    }
+
+    private String getWifiCidr() {
+        try {
+            SharedPreferences preferences = getRemotePreferences(AppSettings.PREF_GROUP);
+            return CidrUtils.normalizeIpv4Cidr(
+                    preferences.getString(AppSettings.KEY_WIFI_CIDR, AppSettings.DEFAULT_WIFI_CIDR)
+            );
+        } catch (Exception exception) {
+            log("[Warning]: remote preferences unavailable, use default CIDR: " + exception);
+            return AppSettings.DEFAULT_WIFI_CIDR;
+        }
+    }
+
+    private String getWifiHostAddress() {
+        return CidrUtils.getHostAddress(getWifiCidr());
+    }
+
+    private String getAddressForInterface(int interfaceType) {
+        if (interfaceType == TETHERING_WIFI) {
+            return getWifiCidr();
+        }
+        return AddressMap.get(interfaceType);
     }
 
     @Override
@@ -142,7 +162,7 @@ public class MainHook extends XposedModule {
                 }
                 log("[Success]: [" + methodName + "] found in " + processName);
 
-                hook(method).intercept(chain -> WIFI_HOST_IFACE_ADDR);
+                hook(method).intercept(chain -> getWifiHostAddress());
             } catch (Exception exception) {
 //                log("exception in " + processName + ": " + exception);
             }
@@ -167,19 +187,19 @@ public class MainHook extends XposedModule {
                     int mInterfaceType = 0;
                     if(field_mInterfaceType == null){
                         // avoid exception
-                        log("[Warning]: [" + WIFI_HOST_IFACE_ADDR + "] field_mInterfaceType not found.");
+                        log("[Warning]: [" + getWifiHostAddress() + "] field_mInterfaceType not found.");
                     }else{
                         mInterfaceType = field_mInterfaceType.getInt(chain.getThisObject());
                     }
 
-                    String address = AddressMap.get(mInterfaceType);
+                    String address = getAddressForInterface(mInterfaceType);
 
                     if (address != null && StackUtils.isCallingFrom(className, callerMethodName_Q)) {
                         final LinkAddress mLinkAddress = (LinkAddress) ctor_LinkAddress.newInstance(address);
                         final IpPrefix prefix = (IpPrefix) ctor_IpPrefix.newInstance(address);
 
                         if (isConflictPrefix(klass, chain.getThisObject(), prefix)) {
-                            log("[Warning]: [" + WIFI_HOST_IFACE_ADDR + "] isConflictPrefix! do not replace.");
+                            log("[Warning]: [" + address + "] isConflictPrefix! do not replace.");
                         } else {
                             log("[Success Edit]:" + address);
                             return mLinkAddress;
