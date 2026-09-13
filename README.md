@@ -6,6 +6,10 @@ SoftAp type hide for Android 10+
 
 SoftAp 5G channel and bandwidth lock for Android 13+ 
 
+## 分支更改
+1. 迁移至 libxposed API 102
+2. 改善UI、增加可调整的热点CIDR配置
+
 ## 功能
 1. 固定IP地址 (Android 9+)
 2. 隐藏热点类型 (Android 10+)
